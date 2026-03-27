@@ -7,7 +7,7 @@ import os
 # 1. 페이지 설정
 st.set_page_config(page_title="나만의 야수 찾기", layout="wide", page_icon="🦁")
 
-# 2. 디자인 수정 (가독성 및 색상 강조)
+# 2. 디자인 수정 (CSS 강화)
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
@@ -36,13 +36,6 @@ st.markdown("""
         font-size: 1.15em;
     }
 
-    /* 결과 텍스트 강조 (진하게) */
-    .result-text {
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 1.1em;
-    }
-
     /* 버튼 디자인 */
     .stButton>button {
         width: 100%; border-radius: 30px; height: 3.5em;
@@ -50,7 +43,8 @@ st.markdown("""
         color: white !important; font-weight: bold; border: None;
     }
     
-    .stMarkdown p { color: #ffffff !important; font-weight: 500; }
+    /* 사이드바 텍스트 색상 조정 */
+    .css-1d391kg, .stMarkdown p { color: #ffffff !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -97,16 +91,27 @@ if df is not None:
 
     if st.sidebar.button("💘 운명의 야수 확인하기"):
         st.balloons()
-        # 샘플 데이터 추출 및 확률 계산 (예시 로직)
-        results = df.sample(5).copy()
-        results['match_prob'] = np.random.uniform(0.7, 0.98, size=5)
+        # 데이터가 충분치 않을 경우를 대비해 샘플링 (실제 모델이 있다면 model.predict 사용 가능)
+        results = df.sample(min(len(df), 5)).copy()
+        results['match_prob'] = np.random.uniform(0.7, 0.98, size=len(results))
         
         st.subheader("✨ [ AI 기반 필승 매칭 파트너 TOP 5 ]")
         
         for i, (idx, row) in enumerate(results.sort_values(by='match_prob', ascending=False).iterrows()):
-            # 상위 3개 취미 추출 (점수가 높은 순)
-            # 실제 데이터에 취미 컬럼이 'p_sports' 형태라면 아래를 수정하세요.
-            p_hobbies = {h: row.get(f'p_{h}', 5) for h in hobby_cols}
+            # 데이터 컬럼명 유연하게 대응 (p_ 접두사가 있든 없든 가져옴)
+            age = int(row.get('p_age', row.get('age', 25)))
+            field = row.get('p_field_cat', row.get('field', '정보없음'))
+            location = row.get('p_from', row.get('from', 'Seoul'))
+            social = row.get('p_social_freq', row.get('social', 8))
+
+            # 취미 상위 3개 추출 로직
+            p_hobbies = {}
+            for h in hobby_cols:
+                # p_sports 혹은 sports 컬럼에서 값을 가져옴 (기본값 5)
+                val = row.get(f'p_{h}', row.get(h, 5))
+                p_hobbies[h] = val
+            
+            # 점수 높은 순으로 정렬 후 상위 3개 키워드 추출
             top_hobbies = sorted(p_hobbies.items(), key=lambda x: x[1], reverse=True)[:3]
             hobby_str = ", ".join([h[0].capitalize() for h in top_hobbies])
 
@@ -115,16 +120,17 @@ if df is not None:
                 with c1: 
                     st.metric(f"{i+1}위 추천", f"{row['match_prob']*100:.1f}%")
                 with c2:
-                    # 모든 텍스트를 진하게(Bold) 및 흰색으로 처리
-                    st.markdown(f"""
-                        <div class="result-text">
-                            🎂 <b>나이:</b> {int(row['p_age'])}세 (차이: {abs(int(row['p_age'])-my_age)}세)<br>
-                            🎓 <b>전공:</b> {row.get('p_field_cat', '정보없음')}<br>
-                            🏠 <b>지역:</b> {row.get('p_from', 'Seoul')}<br>
-                            🔥 <b>사교성 지수:</b> {row.get('p_social_freq', 0)}/14<br>
-                            🎨 <b>선호 취미:</b> {hobby_str}
+                    # 텍스트가 안나오는 문제를 방지하기 위해 인라인 스타일 적용
+                    res_html = f"""
+                        <div style="color: #ffffff !important; font-size: 1.15em; line-height: 1.9; background-color: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
+                            🎂 <b>나이:</b> {age}세 (차이: {abs(age-my_age)}세)<br>
+                            🎓 <b>전공:</b> {field}<br>
+                            🏠 <b>지역:</b> {location}<br>
+                            🔥 <b>사교성 지수:</b> {social}/14<br>
+                            🎨 <b>선호 취미:</b> <span style="color: #FFD700;">{hobby_str}</span>
                         </div>
-                    """, unsafe_allow_html=True)
+                    """
+                    st.markdown(res_html, unsafe_allow_html=True)
                 st.divider()
 else:
     st.error("데이터 파일(partner_pool.csv)을 먼저 업로드해주세요!")
