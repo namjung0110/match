@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 
 # 1. 페이지 설정
-st.set_page_config(page_title="나만의 미녀/야수 찾기", layout="wide", page_icon="🦁")
+st.set_page_config(page_title="나만의 미녀와 야수 찾기", layout="wide", page_icon="🦁")
 
 # CSS 디자인
 st.markdown("""
