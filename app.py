@@ -64,7 +64,7 @@ def load_resources():
 model, df = load_resources()
 
 # 3. 제목 및 수정된 소개 문구
-st.markdown("<h1>🦁 나만의 야수 찾기</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🦁 나만의 미녀/야수 찾기</h1>", unsafe_allow_html=True)
 st.markdown("""
     <div class="intro-card">
         <h3>✨ 다트비 미녀분들 환영합니다~~!!</h3>
