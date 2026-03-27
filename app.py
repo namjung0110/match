@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 # 1. 페이지 설정
-st.set_page_config(page_title="나만의 야수 찾기", layout="wide", page_icon="🦁")
+st.set_page_config(page_title="나만의 미녀/야수 찾기", layout="wide", page_icon="🦁")
 
 # 2. 디자인 수정 (CSS 강화)
 st.markdown("""
