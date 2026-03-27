@@ -5,17 +5,17 @@ import numpy as np
 import os
 
 # 1. 페이지 설정
-st.set_page_config(page_title="나만의 미녀 찾기", layout="wide", page_icon="🦁")
+st.set_page_config(page_title="나만의 야수 찾기", layout="wide", page_icon="🦁")
 
-# 2. 디자인 수정 (글자색 하얗게 강조!)
+# 2. 디자인 수정 (가독성 및 색상 강조)
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
     h1 { color: #FF4B4B !important; text-align: center; font-weight: 900; }
     
-    /* 소개 카드 디자인 수정 */
+    /* 소개 카드 디자인 */
     .intro-card {
-        background-color: #1f2129; /* 약간 더 밝은 남색 계열 */
+        background-color: #1f2129; 
         padding: 30px; 
         border-radius: 20px;
         border-top: 5px solid #FF4B4B; 
@@ -24,15 +24,22 @@ st.markdown("""
         box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
     
-    /* 카드 안의 모든 글자를 밝은 색으로 고정 */
     .intro-card h3 { 
         color: #FF4B4B !important; 
         margin-bottom: 15px; 
         font-weight: bold;
+        font-size: 1.8em;
     }
     .intro-card p, .intro-card b { 
-        color: #ffffff !important; /* 흰색으로 강제 고정 */
+        color: #ffffff !important; 
         line-height: 1.8;
+        font-size: 1.15em;
+    }
+
+    /* 결과 텍스트 강조 (진하게) */
+    .result-text {
+        color: #ffffff !important;
+        font-weight: 700 !important;
         font-size: 1.1em;
     }
 
@@ -43,12 +50,9 @@ st.markdown("""
         color: white !important; font-weight: bold; border: None;
     }
     
-    /* 일반 텍스트들 가독성 향상 */
-    .stMarkdown p { color: #e0e0e0 !important; }
+    .stMarkdown p { color: #ffffff !important; font-weight: 500; }
     </style>
     """, unsafe_allow_html=True)
-
-# --- 이하 로직 동일 ---
 
 hobby_cols = ['sports', 'tvsports', 'exercise', 'dining', 'museums', 'art', 'hiking', 
               'gaming', 'clubbing', 'reading', 'tv', 'theater', 'movies', 'concerts', 
@@ -65,8 +69,8 @@ def load_resources():
 
 model, df = load_resources()
 
-# 3. 제목 및 소개 (수정된 CSS가 적용됩니다)
-st.markdown("<h1>🦁 나만의 미녀 찾기</h1>", unsafe_allow_html=True)
+# 3. 제목 및 수정된 소개 문구
+st.markdown("<h1>🦁 나만의 야수 찾기</h1>", unsafe_allow_html=True)
 st.markdown("""
     <div class="intro-card">
         <h3>✨ 다트비 미녀분들 환영합니다~~!!</h3>
@@ -80,7 +84,6 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# 파일 체크 및 입력창/결과창 로직은 이전과 동일하게 유지...
 if df is not None:
     st.sidebar.header("1️⃣ 기본 프로필")
     my_age = st.sidebar.slider("나이", 18, 50, 24)
@@ -92,19 +95,36 @@ if df is not None:
     for h in hobby_cols:
         user_hobbies[h] = st.sidebar.slider(f"{h.capitalize()}", 1, 10, 5)
 
-    if st.sidebar.button("💘 운명의 미녀 확인하기"):
+    if st.sidebar.button("💘 운명의 야수 확인하기"):
         st.balloons()
+        # 샘플 데이터 추출 및 확률 계산 (예시 로직)
         results = df.sample(5).copy()
         results['match_prob'] = np.random.uniform(0.7, 0.98, size=5)
         
         st.subheader("✨ [ AI 기반 필승 매칭 파트너 TOP 5 ]")
+        
         for i, (idx, row) in enumerate(results.sort_values(by='match_prob', ascending=False).iterrows()):
+            # 상위 3개 취미 추출 (점수가 높은 순)
+            # 실제 데이터에 취미 컬럼이 'p_sports' 형태라면 아래를 수정하세요.
+            p_hobbies = {h: row.get(f'p_{h}', 5) for h in hobby_cols}
+            top_hobbies = sorted(p_hobbies.items(), key=lambda x: x[1], reverse=True)[:3]
+            hobby_str = ", ".join([h[0].capitalize() for h in top_hobbies])
+
             with st.container():
                 c1, c2 = st.columns([1, 4])
-                with c1: st.metric(f"{i+1}위", f"{row['match_prob']*100:.1f}%")
+                with c1: 
+                    st.metric(f"{i+1}위 추천", f"{row['match_prob']*100:.1f}%")
                 with c2:
-                    st.write(f"🎂 **나이:** {int(row['p_age'])}세 | 🎓 **전공:** {row.get('p_field_cat', '정보없음')}")
-                    st.write(f"🏠 **지역:** {row.get('p_from', 'Seoul')} | 🔥 **사교성:** {row.get('p_social_freq', 0)}/14")
+                    # 모든 텍스트를 진하게(Bold) 및 흰색으로 처리
+                    st.markdown(f"""
+                        <div class="result-text">
+                            🎂 <b>나이:</b> {int(row['p_age'])}세 (차이: {abs(int(row['p_age'])-my_age)}세)<br>
+                            🎓 <b>전공:</b> {row.get('p_field_cat', '정보없음')}<br>
+                            🏠 <b>지역:</b> {row.get('p_from', 'Seoul')}<br>
+                            🔥 <b>사교성 지수:</b> {row.get('p_social_freq', 0)}/14<br>
+                            🎨 <b>선호 취미:</b> {hobby_str}
+                        </div>
+                    """, unsafe_allow_html=True)
                 st.divider()
 else:
     st.error("데이터 파일(partner_pool.csv)을 먼저 업로드해주세요!")
